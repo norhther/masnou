@@ -1,0 +1,59 @@
+<!-- templates/add_points.html -->
+{% extends 'base.html' %}
+
+{% block content %}
+<h2>Assign Points</h2>
+<form method="POST">
+    {{ form.hidden_tag() }}
+    <div class="mb-3">
+        {{ form.tournament.label(class="form-label") }}
+        {{ form.tournament(class="form-select") }}
+        {% for error in form.tournament.errors %}
+        <div class="text-danger">{{ error }}</div>
+        {% endfor %}
+    </div>
+    <div class="mb-3">
+        {{ form.player.label(class="form-label") }}
+        {{ form.player(class="form-select") }}
+        {% for error in form.player.errors %}
+        <div class="text-danger">{{ error }}</div>
+        {% endfor %}
+    </div>
+    <div class="mb-3">
+        {{ form.points.label(class="form-label") }}
+        {{ form.points(class="form-control", placeholder="Enter points (e.g., 0.5, 1.0)", step="0.5") }}
+        {% for error in form.points.errors %}
+        <div class="text-danger">{{ error }}</div>
+        {% endfor %}
+    </div>
+    <div class="mb-3">
+        {{ form.category.label(class="form-label") }}
+        <div class="btn-group" role="group" aria-label="Category Selection">
+            {% for value, label in form.category.choices %}
+            <input type="radio" class="btn-check" name="{{ form.category.name }}" id="category{{ value }}"
+                value="{{ value }}" {% if form.category.data==value %}checked{% endif %} autocomplete="off" required>
+            <label class="btn btn-outline-primary" for="category{{ value }}">{{ label }}</label>
+            {% endfor %}
+        </div>
+        {% for error in form.category.errors %}
+        <div class="text-danger">{{ error }}</div>
+        {% endfor %}
+    </div>
+    {{ form.submit(class="btn btn-success") }}
+</form>
+
+<!-- JavaScript to enforce 0.5 increments -->
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const pointsInput = document.querySelector('input[name="points"]');
+        pointsInput.addEventListener('input', function () {
+            let value = parseFloat(this.value);
+            if (!isNaN(value)) {
+                // Round to the nearest 0.5
+                let rounded = Math.round(value * 2) / 2;
+                this.value = rounded;
+            }
+        });
+    });
+</script>
+{% endblock %}

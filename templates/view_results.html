@@ -1,0 +1,78 @@
+<!-- templates/view_results.html -->
+{% extends 'base.html' %}
+
+{% block content %}
+<h2>View Tournament Results</h2>
+<form method="POST" class="mb-4">
+    <div class="mb-3">
+        <label for="tournament" class="form-label">Select Tournament:</label>
+        <select name="tournament" id="tournament" class="form-select" required>
+            <option value="">-- Select Tournament --</option>
+            {% for tournament in tournaments %}
+            <option value="{{ tournament.id }}" {% if selected_tournament and tournament.id==selected_tournament.id
+                %}selected{% endif %}>
+                {{ tournament.date.strftime('%Y-%m-%d') }}
+            </option>
+            {% endfor %}
+        </select>
+    </div>
+    <button type="submit" class="btn btn-primary">View Results</button>
+</form>
+
+{% if selected_tournament %}
+<h3>Results for Tournament on {{ selected_tournament.date.strftime('%Y-%m-%d') }}</h3>
+
+<!-- Category A Results -->
+<h4>Category A</h4>
+{% if category_a_results %}
+<table class="table table-bordered">
+    <thead>
+        <tr>
+            <th>First Name</th>
+            <th>Last Name</th>
+            <th>Points</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for point in category_a_results %}
+        <tr>
+            <td>{{ point.player.first_name }}</td>
+            <td>{{ point.player.last_name }}</td>
+            <td>{{ point.points }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<p>No points assigned for Category A in this tournament yet.</p>
+{% endif %}
+
+<!-- Category B Results -->
+<h4>Category B</h4>
+{% if category_b_results %}
+<table class="table table-bordered">
+    <thead>
+        <tr>
+            <th>First Name</th>
+            <th>Last Name</th>
+            <th>Points</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for point in category_b_results %}
+        <tr>
+            <td>{{ point.player.first_name }}</td>
+            <td>{{ point.player.last_name }}</td>
+            <td>{{ point.points }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<p>No points assigned for Category B in this tournament yet.</p>
+{% endif %}
+
+<a href="{{ url_for('export_results', tournament_id=selected_tournament.id) }}" class="btn btn-success mt-3">Export to
+    CSV</a>
+{% endif %}
+{% endblock %}

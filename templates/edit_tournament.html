@@ -1,0 +1,18 @@
+<!-- templates/edit_tournament.html -->
+{% extends 'base.html' %}
+
+{% block content %}
+<h2>Edit Tournament</h2>
+<form method="POST">
+    {{ form.hidden_tag() }}
+    <div class="mb-3">
+        {{ form.date.label(class="form-label") }}
+        {{ form.date(class="form-control") }}
+        {% for error in form.date.errors %}
+        <div class="text-danger">{{ error }}</div>
+        {% endfor %}
+    </div>
+    {{ form.submit(class="btn btn-primary") }}
+    <a href="{{ url_for('view_tournaments') }}" class="btn btn-secondary">Cancel</a>
+</form>
+{% endblock %}

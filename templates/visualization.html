@@ -1,0 +1,302 @@
+<!-- templates/visualization.html -->
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>Player Points Visualization</h2>
+    <form method="POST" class="mb-4">
+        {{ form.hidden_tag() }}
+
+        <!-- Visualization Type Selection -->
+        <div class="mb-3">
+            {{ form.visualization_type.label(class="form-label") }}
+            <div>
+                {% for subfield in form.visualization_type %}
+                <div class="form-check form-check-inline">
+                    {{ subfield(class="form-check-input") }}
+                    {{ subfield.label(class="form-check-label") }}
+                </div>
+                {% endfor %}
+                {% for error in form.visualization_type.errors %}
+                <div class="text-danger">{{ error }}</div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Specific Tournament Fields -->
+        <div id="specific_tournament_fields" style="display: none;">
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    {{ form.specific_tournament.label(class="form-label") }}
+                    {{ form.specific_tournament(class="form-select") }}
+                    {% for error in form.specific_tournament.errors %}
+                    <div class="text-danger">{{ error }}</div>
+                    {% endfor %}
+                </div>
+                <div class="col-md-6">
+                    {{ form.specific_top_n.label(class="form-label") }}
+                    {{ form.specific_top_n(class="form-control", min="1", max="20") }}
+                    {% for error in form.specific_top_n.errors %}
+                    <div class="text-danger">{{ error }}</div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- General Classification Fields -->
+        <div id="general_classification_fields" style="display: none;">
+            <!-- Year Filter -->
+            <div class="mb-3">
+                {{ form.year.label(class="form-label") }}
+                {{ form.year(class="form-control") }}
+                {% for error in form.year.errors %}
+                <div class="text-danger">{{ error }}</div>
+                {% endfor %}
+            </div>
+
+            <!-- General Top N Players -->
+            <div class="mb-3">
+                {{ form.general_top_n.label(class="form-label") }}
+                {{ form.general_top_n(class="form-control", min="1", max="50") }}
+                {% for error in form.general_top_n.errors %}
+                <div class="text-danger">{{ error }}</div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Submit Button -->
+        {{ form.submit(class="btn btn-primary") }}
+    </form>
+
+    <!-- Display Tournament Chart if Data Exists -->
+    {% if tournament_chart_data %}
+    <div class="mb-5">
+        <h3>Top {{ tournament_chart_data.data | length }} Players in Tournament on {{
+            tournament_chart_data.tournament_date }}</h3>
+        <div class="chart-container">
+            <canvas id="tournamentChart" width="800" height="600"></canvas>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Display Overall Performance Chart if Data Exists -->
+    {% if overall_chart_data %}
+    <div class="mb-5">
+        <h3>{{ overall_chart_data.description }}</h3>
+        <div class="chart-container">
+            <canvas id="overallChart" width="800" height="600"></canvas>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Include Chart.js from CDN -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<!-- Custom JavaScript for Handling Forms and Charts -->
+<script>
+    // Ensure the script runs after the DOM is fully loaded
+    document.addEventListener('DOMContentLoaded', function () {
+        // Handle Visualization Type Selection
+        const visualizationTypeRadios = document.getElementsByName('visualization_type');
+        const specificFields = document.getElementById('specific_tournament_fields');
+        const generalFields = document.getElementById('general_classification_fields');
+
+        function toggleFields() {
+            const selectedType = document.querySelector('input[name="visualization_type"]:checked').value;
+            console.log("Selected Visualization Type:", selectedType);
+            if (selectedType === 'tournament') {
+                specificFields.style.display = 'block';
+                generalFields.style.display = 'none';
+            } else if (selectedType === 'general') {
+                specificFields.style.display = 'none';
+                generalFields.style.display = 'block';
+            }
+        }
+
+        // Attach event listeners to visualization type radio buttons
+        visualizationTypeRadios.forEach(radio => {
+            radio.addEventListener('change', toggleFields);
+        });
+
+        // Initialize fields on page load
+        toggleFields();
+    });
+
+    // **1. Tournament Chart Configuration**
+    {% if tournament_chart_data %}
+    console.log("Tournament Chart Data:", {{ tournament_chart_data | tojson }});
+    const ctxTournament = document.getElementById('tournamentChart').getContext('2d');
+
+    // Safely destroy existing chart instance if it exists and is a Chart instance
+    if (window.tournamentChart instanceof Chart) {
+        console.log("Destroying existing Tournament Chart instance.");
+        window.tournamentChart.destroy();
+    }
+
+    // Initialize the Tournament Chart as a horizontal bar chart
+    window.tournamentChart = new Chart(ctxTournament, {
+        type: 'bar',
+        data: {
+            labels: {{ tournament_chart_data.labels | tojson }},
+        datasets: [{
+            label: 'Points',
+            data: {{ tournament_chart_data.data | tojson }},
+        backgroundColor: 'rgba(54, 162, 235, 0.6)',
+        borderColor: 'rgba(54, 162, 235, 1)',
+        borderWidth: 1
+                    }]
+                },
+        options: {
+        indexAxis: 'y', // Rotate the chart to horizontal
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            title: {
+                display: true,
+                text: 'Top Players Points in Selected Tournament',
+                font: {
+                    size: 18
+                }
+            },
+            legend: {
+                display: false
+            },
+            tooltip: {
+                enabled: true,
+                callbacks: {
+                    label: function (context) {
+                        return `Points: ${context.parsed.x}`; // Adjusted for horizontal chart
+                    }
+                }
+            }
+        },
+        scales: {
+            y: { // Adjusted for horizontal chart
+                title: {
+                    display: true,
+                    text: 'Players',
+                    font: {
+                        size: 14
+                    }
+                },
+                ticks: {
+                    autoSkip: false,
+                    maxRotation: 45,
+                    minRotation: 45,
+                    font: {
+                        size: 12
+                    }
+                }
+            },
+            x: { // Adjusted for horizontal chart
+                beginAtZero: true,
+                title: {
+                    display: true,
+                    text: 'Points',
+                    font: {
+                        size: 14
+                    }
+                },
+                ticks: {
+                    font: {
+                        size: 12
+                    }
+                }
+            }
+        }
+    }
+            });
+
+    console.log("Tournament Chart Initialized:", window.tournamentChart);
+    {% endif %}
+
+    // **2. Overall Performance Chart Configuration**
+    {% if overall_chart_data %}
+    console.log("Overall Chart Data:", {{ overall_chart_data | tojson }});
+    const ctxOverall = document.getElementById('overallChart').getContext('2d');
+
+    // Safely destroy existing chart instance if it exists and is a Chart instance
+    if (window.overallChart instanceof Chart) {
+        console.log("Destroying existing Overall Chart instance.");
+        window.overallChart.destroy();
+    }
+
+    // Initialize the Overall Performance Chart as a horizontal bar chart
+    window.overallChart = new Chart(ctxOverall, {
+        type: 'bar',
+        data: {
+            labels: {{ overall_chart_data.labels | tojson }},
+        datasets: [{
+            label: 'Total Points',
+            data: {{ overall_chart_data.data | tojson }},
+        backgroundColor: 'rgba(255, 99, 132, 0.6)',
+        borderColor: 'rgba(255, 99, 132, 1)',
+        borderWidth: 1
+                    }]
+                },
+        options: {
+        indexAxis: 'y', // Rotate the chart to horizontal
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            title: {
+                display: true,
+                text: 'Top Players Total Points Across All Tournaments',
+                font: {
+                    size: 18
+                }
+            },
+            legend: {
+                display: false
+            },
+            tooltip: {
+                enabled: true,
+                callbacks: {
+                    label: function (context) {
+                        return `Total Points: ${context.parsed.x}`; // Adjusted for horizontal chart
+                    }
+                }
+            }
+        },
+        scales: {
+            y: { // Adjusted for horizontal chart
+                title: {
+                    display: true,
+                    text: 'Players',
+                    font: {
+                        size: 14
+                    }
+                },
+                ticks: {
+                    autoSkip: false,
+                    maxRotation: 45,
+                    minRotation: 45,
+                    font: {
+                        size: 12
+                    }
+                }
+            },
+            x: { // Adjusted for horizontal chart
+                beginAtZero: true,
+                title: {
+                    display: true,
+                    text: 'Total Points',
+                    font: {
+                        size: 14
+                    }
+                },
+                ticks: {
+                    font: {
+                        size: 12
+                    }
+                }
+            }
+        }
+    }
+            });
+
+    console.log("Overall Chart Initialized:", window.overallChart);
+    {% endif %}
+</script>
+{% endblock %}
