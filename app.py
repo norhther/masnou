@@ -6,7 +6,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy import UniqueConstraint, func
 from flask_wtf import FlaskForm
 from wtforms import StringField, SelectField, FloatField, SubmitField, DateField, RadioField, IntegerField, BooleanField, SelectMultipleField
-from wtforms.validators import DataRequired, NumberRange, ValidationError, Optional
+from wtforms.validators import DataRequired, NumberRange, ValidationError, Optional, InputRequired  
 import unicodedata
 import csv
 import io
@@ -107,7 +107,7 @@ class PointForm(FlaskForm):
     points = FloatField(
         'Points',
         validators=[
-            DataRequired(),
+            InputRequired(),
             NumberRange(min=0),
             HalfStepCheck  # Attach the custom validator here
         ]
