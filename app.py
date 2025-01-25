@@ -83,7 +83,8 @@ def HalfStepCheck(form, field):
     except (ValueError, TypeError):
         raise ValidationError('Invalid number.')
 
-    if (value * 2) % 1 != 0:
+    # allow also 0
+    if (value * 2) % 1 != 0 and value != 0: 
         raise ValidationError('Points must be in 0.5 increments.')
 
 # Forms
