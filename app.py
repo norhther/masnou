@@ -5,7 +5,7 @@ from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy import UniqueConstraint, func
 from flask_wtf import FlaskForm
-from wtforms import StringField, SelectField, FloatField, SubmitField, DateField, RadioField, IntegerField, BooleanField, SelectMultipleField
+from wtforms import StringField, SelectField, FloatField, DecimalField, SubmitField, DateField, RadioField, IntegerField, BooleanField, SelectMultipleField
 from wtforms.validators import DataRequired, NumberRange, ValidationError, Optional, InputRequired  
 import unicodedata
 import csv
@@ -14,6 +14,7 @@ import os
 import json
 from flask_login import LoginManager, UserMixin, login_user, logout_user, current_user, login_required
 from werkzeug.security import generate_password_hash, check_password_hash
+from decimal import Decimal, InvalidOperation
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'your_secret_key_here'  # Replace with a strong secret key
@@ -74,18 +75,24 @@ def load_user(user_id):
     return User.query.get(int(user_id))
 
 # Custom Validator
+
 def HalfStepCheck(form, field):
     """
-    Validates that the input is a multiple of 0.5.
+    Validates that the input is a multiple of 0.5, including 0.
     """
     try:
-        value = float(field.data)
-    except (ValueError, TypeError):
-        raise ValidationError('Invalid number.')
+        # Convert to Decimal for precise arithmetic
+        value = Decimal(field.data)
+    except (ValueError, TypeError, InvalidOperation):
+        raise ValidationError('Invalid number. Please enter a numeric value.')
 
-    # allow also 0
-    if (value * 2) % 1 != 0 and value != 0: 
-        raise ValidationError('Points must be in 0.5 increments.')
+    if value < 0:
+        raise ValidationError('Points must be 0 or greater.')
+
+    # Check if the value is a multiple of 0.5
+    if (value * 2) != (value * 2).to_integral_value():
+        raise ValidationError('Points must be in 0.5 increments (e.g., 0.5, 1.0, 1.5).')
+
 
 # Forms
 class PlayerForm(FlaskForm):
@@ -102,24 +109,50 @@ class EditTournamentForm(FlaskForm):
     submit = SubmitField('Update Tournament')
 
 class PointForm(FlaskForm):
-    tournament = SelectField('Tournament', coerce=int, validators=[DataRequired()])
-    player = SelectField('Player', coerce=int, validators=[DataRequired()])
-    points = FloatField(
+    tournament = SelectField(
+        'Tournament',
+        coerce=int,
+        validators=[DataRequired(message="Please select a tournament.")]
+    )
+    player = SelectField(
+        'Player',
+        coerce=int,
+        validators=[DataRequired(message="Please select a player.")]
+    )
+    points = DecimalField(
         'Points',
         validators=[
-            InputRequired(),
-            NumberRange(min=0),
-            HalfStepCheck  # Attach the custom validator here
-        ]
+            InputRequired(message="Points are required."),
+            NumberRange(min=0, message="Points must be 0 or greater.")
+        ],
+        places=1,  # Allow one decimal place
+        rounding=None  # Prevent automatic rounding
     )
     category = RadioField(
         'Category',
         choices=[('A', 'Category A'), ('B', 'Category B')],
-        validators=[DataRequired()],
+        validators=[DataRequired(message="Please select a category.")],
         default='A'  # Set a default selection
     )
     submit = SubmitField('Add Points')
 
+    def validate_points(self, field):
+        """
+        Validates that the input is a multiple of 0.5, including 0.
+        """
+        try:
+            # Convert to Decimal for precise arithmetic
+            value = Decimal(field.data)
+        except (ValueError, TypeError, InvalidOperation):
+            raise ValidationError('Invalid number. Please enter a numeric value.')
+
+        if value < 0:
+            raise ValidationError('Points must be 0 or greater.')
+
+        # Check if the value is a multiple of 0.5
+        if (value * 2) != (value * 2).to_integral_value():
+            raise ValidationError('Points must be in 0.5 increments (e.g., 0.5, 1.0, 1.5).')
+        
 class VisualizationForm(FlaskForm):
     visualization_type = RadioField(
         'Visualization Type',
