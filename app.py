@@ -28,12 +28,6 @@ login_manager.init_app(app)
 login_manager.login_view = 'login'  # Redirect to this view if not authenticated
 
 
-@app.route('/static/<path:filename>')
-def custom_static(filename):
-    response = send_from_directory('static', filename, cache_timeout=60*60*24*30)  # 30 days
-    return response
-
-
 # Database Models
 class User(UserMixin, db.Model):
     __tablename__ = 'user'
