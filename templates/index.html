@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>General Player Ranking</h2>
+    <table class="table table-striped mt-3">
+        <thead>
+            <tr>
+                <th scope="col">Rank</th>
+                <th scope="col">First Name</th>
+                <th scope="col">Last Name</th>
+                <th scope="col">Total Points</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% if general_ranking %}
+            {% for rank, player in enumerate(general_ranking, start=1) %}
+            <tr>
+                <td>{{ rank }}</td>
+                <td>{{ player[0] }}</td>
+                <td>{{ player[1] }}</td>
+                <td>{{ player[2] }}</td>
+            </tr>
+            {% endfor %}
+            {% else %}
+            <tr>
+                <td colspan="4" class="text-center">No data available</td>
+            </tr>
+            {% endif %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

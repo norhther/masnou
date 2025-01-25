@@ -1,42 +1,125 @@
 <!-- templates/base.html -->
-
 <!DOCTYPE html>
 <html lang="en">
 
 <head>
     <meta charset="UTF-8">
-    <title>Chess Tournament Manager</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='images/fav.png') }}">
+    <title>El Masnou</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        /* Existing styles */
+
+        /* Logo styling */
+        .navbar-brand img {
+            height: 100px;
+            /* Increased logo height */
+            width: auto;
+            /* Maintain aspect ratio */
+            margin-right: 15px;
+            /* Space between logo and title */
+        }
+
+        /* Navbar styling */
+        .navbar {
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .navbar-light {
+            background-color: #f8f9fa;
+        }
+
+        /* Spacing between navbar items */
+        .navbar-nav .nav-item {
+            margin-right: 2em;
+            /* Space between each nav item */
+        }
+
+        .container {
+            margin-top: 20px;
+        }
+
+        /* Text bigger always */
+        .navbar {
+            font-size: 1.5em;
+        }
+
+        .table {
+            font-size: 1.4em;
+        }
+    </style>
 </head>
 
 <body>
-    <nav class="navbar navbar-expand-lg navbar-light bg-light mb-4">
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
         <div class="container-fluid">
-            <a class="navbar-brand" href="{{ url_for('index') }}">Chess Tournament Manager</a>
+            <!-- Logo and Title -->
+            <a class="navbar-brand d-flex align-items-center" href="{{ url_for('index') }}">
+                <img src="{{ url_for('static', filename='images/logo.png') }}" alt="El Torneo Masnou Logo">
+            </a>
+
+            <!-- Toggle button for smaller screens -->
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
                 aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
+
+            <!-- Navbar links -->
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('add_player') }}">Add Player</a>
+                    <!-- Tournaments Section -->
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="tournamentsDropdown" role="button"
+                            data-bs-toggle="dropdown" aria-expanded="false">
+                            Tournaments
+                        </a>
+                        <ul class="dropdown-menu" aria-labelledby="tournamentsDropdown">
+                            <li><a class="dropdown-item" href="{{ url_for('add_tournament') }}">Add Tournament</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('view_tournaments') }}">View Tournaments</a>
+                            </li>
+                        </ul>
                     </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('add_tournament') }}">Add Tournament</a>
+
+                    <!-- Players Section -->
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="playersDropdown" role="button"
+                            data-bs-toggle="dropdown" aria-expanded="false">
+                            Players
+                        </a>
+                        <ul class="dropdown-menu" aria-labelledby="playersDropdown">
+                            <li><a class="dropdown-item" href="{{ url_for('add_player') }}">Add Player</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('add_points') }}">Add Points</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('view_players') }}">View Players</a></li>
+                        </ul>
                     </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('add_points') }}">Add Points</a>
+
+                    <!-- Data Section -->
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="dataDropdown" role="button"
+                            data-bs-toggle="dropdown" aria-expanded="false">
+                            Data
+                        </a>
+                        <ul class="dropdown-menu" aria-labelledby="dataDropdown">
+                            <li><a class="dropdown-item" href="{{ url_for('view_results') }}">View Results</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('visualization') }}">Visualization</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('progression') }}">Progression</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('export_page') }}">Export Database</a></li>
+                        </ul>
                     </li>
+                </ul>
+
+                <!-- Authentication Links -->
+                <ul class="navbar-nav">
+                    {% if current_user.is_authenticated %}
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('view_results') }}">View Results</a>
+                        <a class="nav-link" href="{{ url_for('logout') }}">Logout</a>
                     </li>
+                    {% else %}
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('view_tournaments') }}">View Tournaments</a>
+                        <a class="nav-link" href="{{ url_for('login') }}">Login</a>
                     </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('visualization') }}">Visualization</a>
-                    </li>
+                    {% endif %}
                 </ul>
             </div>
         </div>

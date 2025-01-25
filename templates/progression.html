@@ -1,0 +1,135 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>Player Points Progression Across Tournaments</h2>
+    <form method="POST" class="mb-4">
+        {{ form.hidden_tag() }}
+
+        <!-- Select Players -->
+        <div class="mb-3">
+            {{ form.players.label(class="form-label") }}
+            {{ form.players(class="form-control") }}
+            {% for error in form.players.errors %}
+            <div class="text-danger">{{ error }}</div>
+            {% endfor %}
+        </div>
+
+        <!-- Submit Button -->
+        {{ form.submit(class="btn btn-primary") }}
+    </form>
+
+    {% if progression_data %}
+    <hr>
+    <h3>Player Progression Graph</h3>
+    <div class="chart-container">
+        <canvas id="progressionChart" width="1000" height="700"></canvas>
+    </div>
+    {% else %}
+    <p>No data available to display. Please select players and try again.</p>
+    {% endif %}
+</div>
+
+<!-- Include Chart.js and Adapter -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
+
+{% if progression_data %}
+<script>
+    console.log("Initializing Progression Chart...");
+    console.log("Progression Data:", {{ progression_data | tojson }});
+
+    // Get the canvas context
+    const ctx = document.getElementById('progressionChart');
+    if (!ctx) {
+        console.error("Canvas element not found!");
+    } else {
+        console.log("Canvas context initialized.");
+        const chartContext = ctx.getContext('2d');
+
+        // Parse progression data
+        const progressionData = {{ progression_data | tojson
+    }};
+    const datasets = Object.keys(progressionData).map(playerName => ({
+        label: playerName,
+        data: progressionData[playerName].dates.map((date, index) => ({
+            x: date, // Date as x-axis value
+            y: progressionData[playerName].points[index] // Points as y-axis value
+        })),
+        borderColor: `hsl(${Math.random() * 360}, 70%, 50%)`,
+        borderWidth: 2,
+        tension: 0.4,
+        fill: false,
+    }));
+
+    console.log("Datasets for Chart:", datasets);
+
+    // Initialize the Chart.js instance
+    new Chart(chartContext, {
+        type: 'line',
+        data: {
+            datasets: datasets,
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                title: {
+                    display: true,
+                    text: 'Player Points Progression Across Tournaments',
+                    font: {
+                        size: 30
+                    }
+                },
+                tooltip: {
+                    callbacks: {
+                        title: function (tooltipItems) {
+                            return tooltipItems[0].raw.x; // Show the date
+                        },
+                        label: function (tooltipItem) {
+                            return `Points: ${tooltipItem.raw.y}`; // Show the points
+                        }
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    type: 'time',
+                    time: {
+                        parser: 'yyyy-MM-dd', // Corrected to use 'yyyy' for year
+                        tooltipFormat: 'MMM dd, yyyy', // Format displayed in tooltips
+                        unit: 'month', // Aggregates by month
+                        displayFormats: {
+                            month: 'MMM yyyy', // Format displayed on the x-axis
+                        },
+                    },
+                    title: {
+                        display: true,
+                        text: 'Tournament Date',
+                        font: {
+                            size: 20
+                        }
+                    },
+                    ticks: {
+                        autoSkip: true,
+                        maxRotation: 45,
+                        minRotation: 45,
+                    }
+                },
+                y: {
+                    title: {
+                        display: true,
+                        text: 'Points',
+                        font: {
+                            size: 20
+                        }
+                    },
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+    }
+</script>
+{% endif %}
+{% endblock %}
