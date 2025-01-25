@@ -1,6 +1,6 @@
 # app.py
 
-from flask import Flask, render_template, request, redirect, url_for, send_file, flash, Response
+from flask import Flask, render_template, request, redirect, url_for, send_file, flash, Response, send_from_directory
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy import UniqueConstraint, func
@@ -26,6 +26,13 @@ db = SQLAlchemy(app)
 login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = 'login'  # Redirect to this view if not authenticated
+
+
+@app.route('/static/<path:filename>')
+def custom_static(filename):
+    response = send_from_directory('static', filename, cache_timeout=60*60*24*30)  # 30 days
+    return response
+
 
 # Database Models
 class User(UserMixin, db.Model):
