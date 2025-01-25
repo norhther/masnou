@@ -300,6 +300,21 @@ def export_page():
     return render_template('export.html')
 
 
+
+@app.route('/export-db')
+@login_required
+def export_db():
+    try:
+        # Path to the database file
+        db_path = 'instance/chess_tournament.db'
+        return send_file(db_path, as_attachment=True, download_name='masnou.db')
+    except FileNotFoundError:
+        return "Database file not found.", 404
+    except Exception as e:
+        return f"An error occurred: {str(e)}", 500
+
+
+
 @app.route('/add_player', methods=['GET', 'POST'])
 @login_required
 def add_player():
